@@ -87,10 +87,7 @@ class Enrollment(models.Model):
 class Question(models.Model):
     lesson = models.ForeignKey(Course, on_delete=models.CASCADE)
     content = models.CharField(max_length=550, null=True)
-    grade = models.CharField(max_length=10, choices=[
-        ('Passed', 'Passed'),
-        ('Failed', 'Failed')
-    ])
+    grade = models.FloatField(default=5.0)
 
     def __str__(self):
         return "Question: " + self.content
