@@ -118,27 +118,32 @@ def extract_answers(request):
        if key.startswith('choice'):
            value = request.POST[key]
            choice_id = int(value)
-           submitted_anwsers.append(choice_id)
+           submitted_anwsers.append(Choice.objects.get(id=choice_id))
    return submitted_anwsers
 
 def show_exam_result(request, course_id, submission_id):
+    context = {}
     course = get_object_or_404(Course, pk=course_id)
-    submission = get_object_or_404(Submission, pk=submission_id)
-    selected = submission.choices.all()
-    total_mark, mark = 0, 0
-    for question in course.question_set.all():
-        total_mark += question.grade
-        if question.is_get_score(selected):
-            mark += question.grade
-    
-    return render(
-        request,
-        'onlinecourse/exam_result_bootstrap.html',
-        {"course":course, "choices":selected, "mark":mark, 
-            "total_mark": total_mark, 
-            "submission": submission,
-            "grade": int((mark / total_mark) * 100) }
-    )
+    submission = Submission.objects.get(id=submission_id)
+    choices = submission.choices.all()
+    my_answers = 0
+    correct_answers = 0
+    #TODO the right query to filter two tables
+    for question in course.question_set.all(): 
+       for choice in question.choice_set.all():
+            if choice.is_correct == True:
+                correct_answers += 1
+    #correct_answers = Choice.objects.filter(is_correct=True).count()
+    print(correct_answers)
+    for choice in choices:
+        if choice.is_correct:
+            my_answers += choice.question.grade
+    exam_score = (my_answers / correct_answers) * 100
+    context['course'] = course
+    context['grade'] = exam_score
+    context['choices'] = choices
+
+    return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
 
 
 
